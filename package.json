@@ -1,6 +1,6 @@
 {
   "name": "kpl-packager",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "create a branch with selection of GitHub approved Pull Requests",
   "main": "index.js",
   "bin": {
