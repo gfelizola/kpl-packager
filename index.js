@@ -9,7 +9,7 @@ const moment    = require('moment');
 const SimpleGit = require('simple-git');
 
 // Modulos Internos
-const api = require('./API')('repos/mercadolibre/fury_kplfront');
+const API = require('./API');
 
 // Firulas
 const Spinner = require('cli-spinner').Spinner;
@@ -17,9 +17,8 @@ const spinner = new Spinner('%s');
 spinner.setSpinnerString("⣾⣽⣻⢿⡿⣟⣯⣷");
 
 //GLOBALS
-var approveds, selecteds, branch,
+var api, approveds, selecteds, branch,
     git = SimpleGit( process.pwd );
-    // git = SimpleGit( '/Users/gfelizola/Dev/kpl-express-react' );
 
 const onError = err => {
     console.error(err);
@@ -32,12 +31,11 @@ const getPRs = function(){
 
     api('pulls')
         .get()
-        .catch( onError )
         .then( data => {
             spinner.stop(true);
-
             getReviews( data );
-        });
+        })
+        .catch( onError );
 }
 
 const getReviews = function( prs ) {
@@ -231,4 +229,16 @@ const handleMergeError = function() {
     })
 }
 
-getPRs();
+git.listRemote(['--get-url'], function(err, data) {
+    if (!err) {
+        let matchs = /git@github\.com:(.*)\.git/gi.exec( data );
+        let repo = matchs[1];
+
+        console.log( 'Inicializando para repositório'.yellow, repo.white );
+        console.log( _.padStart('', 31 + repo.length, '=').yellow );
+        console.log('\n');
+
+        api = API( `repos/${repo}` );
+        getPRs();
+    }
+});
