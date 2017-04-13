@@ -17,10 +17,9 @@ const spinner = new Spinner('%s');
 spinner.setSpinnerString("⣾⣽⣻⢿⡿⣟⣯⣷");
 
 //GLOBALS
-var api, approveds, selecteds, branch,
-    git = SimpleGit( '/Users/gfelizola/Dev/kpl-express-react' );
-
-    // git = SimpleGit( process.pwd );
+var api, approveds, selecteds, branch, showCommits,
+    // git = SimpleGit( '/Users/gfelizola/Dev/kpl-express-react' );
+    git = SimpleGit( process.pwd );
 
 const onError = err => {
     console.error(err);
@@ -111,23 +110,20 @@ const getUserOptions = function( approvedsPRs ){
             }
             return true;
         }
-    },{
-        type     : 'list',
-        message  : 'Criar/Alterar changelog',
-        name     : 'changelog',
-        choices  : ['Sim', 'Não'],
-        default: 'Sim'
-    }]).then(answers => {
-        let { prs, branchFrom, changelog } = answers;
+    },
+    // {
+    //     type     : 'list',
+    //     message  : 'Adicionar commits ao changelog',
+    //     name     : 'changelog',
+    //     choices  : ['Sim', 'Não'],
+    //     default: 'Sim'
+    // }
+    ]).then(answers => {
+        let { prs, branchFrom } = answers;
         branch      = answers.branch;
         selecteds   = getPRsFromSelection( prs, approvedsPRs );
 
-        // createBranch( branchFrom );
-
-        if ( changelog === 'Sim' ) {
-            createMail();
-        }
-
+        createBranch( branchFrom );
     });
 }
 
@@ -190,13 +186,15 @@ const mergeSelectedPRs = function( total, currentIndex ) {
             console.log('Pacote criado com sucesso'.green);
             console.log('Branch:'.green, branch.white);
             console.log('----------------'.green);
+
+            createMail();
         })
 
     } else {
         let pr = selecteds[currentIndex];
         mergePR( pr ).then( result => {
-            console.log( 'Resultado do merge' );
-            console.log( result );
+            console.log( 'Resultado do merge'.green );
+            console.log( result.gray );
             mergeSelectedPRs( total, ++currentIndex );
         }).catch( err => {
             console.log('Erro no merge'.red);
@@ -243,19 +241,19 @@ const createMail = function() {
     //     }
     // });
 
-    let changeLogMessage = `Version created at ${moment().format('DD/MM/YYYY HH:mm')} on branch ${branch}.
+    let changeLogMessage = `
+=============================================================================
+Version created at ${moment().format('DD/MM/YYYY HH:mm')} on branch ${branch}.
 
-    Changes:
+Changes:
 `;
 
     selecteds.forEach( pr => {
         changeLogMessage += ` - #${pr.number} - ${pr.title} (${pr.head.ref})
-        `
+`
     });
 
-    console.log(changeLogMessage);
-
-
+    console.log( changeLogMessage.white );
 }
 
 const handleMergeError = function() {
@@ -281,7 +279,6 @@ git.listRemote(['--get-url'], function(err, data) {
 
         console.log( 'Inicializando para repositório'.yellow, repo.white );
         console.log( _.padStart('', 31 + repo.length, '=').yellow );
-        console.log('\n');
 
         api = API( `repos/${repo}` );
         getPRs();
