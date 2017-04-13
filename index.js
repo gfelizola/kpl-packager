@@ -18,7 +18,6 @@ spinner.setSpinnerString("⣾⣽⣻⢿⡿⣟⣯⣷");
 
 //GLOBALS
 var api, approveds, selecteds, branch, showCommits,
-    // git = SimpleGit( '/Users/gfelizola/Dev/kpl-express-react' );
     git = SimpleGit( process.pwd );
 
 const onError = err => {
@@ -123,7 +122,8 @@ const getUserOptions = function( approvedsPRs ){
         branch      = answers.branch;
         selecteds   = getPRsFromSelection( prs, approvedsPRs );
 
-        createBranch( branchFrom );
+        // createBranch( branchFrom );
+        createChangeLog()
     });
 }
 
@@ -187,7 +187,7 @@ const mergeSelectedPRs = function( total, currentIndex ) {
             console.log('Branch:'.green, branch.white);
             console.log('----------------'.green);
 
-            createMail();
+            createChangeLog();
         })
 
     } else {
@@ -227,7 +227,7 @@ const mergePR = function(pr) {
     });
 }
 
-const createMail = function() {
+const createChangeLog = function() {
     // git.log([
     //     "--pretty='%C(magenta)%h%C(red)%d %C(yellow)%ar %C(green)%s %C(yellow)(%an)'",
     //     `master..${branch}`
@@ -249,7 +249,7 @@ Changes:
 `;
 
     selecteds.forEach( pr => {
-        changeLogMessage += ` - #${pr.number} - ${pr.title} (${pr.head.ref})
+        changeLogMessage += ` - #${pr.number} - ${pr.title} (${pr.user.login})
 `
     });
 
