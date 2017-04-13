@@ -110,20 +110,12 @@ const getUserOptions = function( approvedsPRs ){
             return true;
         }
     },
-    // {
-    //     type     : 'list',
-    //     message  : 'Adicionar commits ao changelog',
-    //     name     : 'changelog',
-    //     choices  : ['Sim', 'Não'],
-    //     default: 'Sim'
-    // }
     ]).then(answers => {
         let { prs, branchFrom } = answers;
         branch      = answers.branch;
         selecteds   = getPRsFromSelection( prs, approvedsPRs );
 
-        // createBranch( branchFrom );
-        createChangeLog()
+        createBranch( branchFrom );
     });
 }
 
