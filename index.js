@@ -18,7 +18,9 @@ spinner.setSpinnerString("⣾⣽⣻⢿⡿⣟⣯⣷");
 
 //GLOBALS
 var api, approveds, selecteds, branch,
-    git = SimpleGit( process.pwd );
+    git = SimpleGit( '/Users/gfelizola/Dev/kpl-express-react' );
+
+    // git = SimpleGit( process.pwd );
 
 const onError = err => {
     console.error(err);
@@ -78,7 +80,8 @@ const getApprovedPRs = function ( prs ) {
         if ( isApproved ) approveds.push( pr );
     });
 
-    getUserOptions( approveds )
+    getUserOptions( approveds );
+
 }
 
 const getUserOptions = function( approvedsPRs ){
@@ -108,13 +111,23 @@ const getUserOptions = function( approvedsPRs ){
             }
             return true;
         }
-    }
-    ]).then(answers => {
-        let { prs, branchFrom } = answers;
+    },{
+        type     : 'list',
+        message  : 'Criar/Alterar changelog',
+        name     : 'changelog',
+        choices  : ['Sim', 'Não'],
+        default: 'Sim'
+    }]).then(answers => {
+        let { prs, branchFrom, changelog } = answers;
         branch      = answers.branch;
         selecteds   = getPRsFromSelection( prs, approvedsPRs );
 
-        createBranch( branchFrom );
+        // createBranch( branchFrom );
+
+        if ( changelog === 'Sim' ) {
+            createMail();
+        }
+
     });
 }
 
@@ -182,7 +195,8 @@ const mergeSelectedPRs = function( total, currentIndex ) {
     } else {
         let pr = selecteds[currentIndex];
         mergePR( pr ).then( result => {
-            console.log('Resultado do merge', result);
+            console.log( 'Resultado do merge' );
+            console.log( result );
             mergeSelectedPRs( total, ++currentIndex );
         }).catch( err => {
             console.log('Erro no merge'.red);
@@ -215,6 +229,35 @@ const mergePR = function(pr) {
     });
 }
 
+const createMail = function() {
+    // git.log([
+    //     "--pretty='%C(magenta)%h%C(red)%d %C(yellow)%ar %C(green)%s %C(yellow)(%an)'",
+    //     `master..${branch}`
+    // ], ( err, result ) => {
+    //     if ( result.all ) {
+    //         let commits = result.all[0].hash.split('\n')
+    //         // console.log( result.all[0] );
+    //         commits.forEach( log => {
+    //             console.log( log );
+    //         });
+    //     }
+    // });
+
+    let changeLogMessage = `Version created at ${moment().format('DD/MM/YYYY HH:mm')} on branch ${branch}.
+
+    Changes:
+`;
+
+    selecteds.forEach( pr => {
+        changeLogMessage += ` - #${pr.number} - ${pr.title} (${pr.head.ref})
+        `
+    });
+
+    console.log(changeLogMessage);
+
+
+}
+
 const handleMergeError = function() {
     spinner.setSpinnerTitle(`Desfazendo comandos git (reset, delete branch)`);
     spinner.start();
@@ -229,6 +272,8 @@ const handleMergeError = function() {
     })
 }
 
+
+
 git.listRemote(['--get-url'], function(err, data) {
     if (!err) {
         let matchs = /git@github\.com:(.*)\.git/gi.exec( data );
@@ -242,3 +287,4 @@ git.listRemote(['--get-url'], function(err, data) {
         getPRs();
     }
 });
+
